@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <meta
+    name="description"
+    content="A little interactive birthday card"
+  />
+
+  <title>A Little Birthday Surprise 🎂</title>
+
+  <style>
+    /* =========================
+       RESET + ACCESSIBILITY
+    ========================== */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family:
+        "Trebuchet MS",
+        "Segoe UI",
+        system-ui,
+        sans-serif;
+
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,.7) 0 2px, transparent 3px),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.5) 0 2px, transparent 3px),
+        linear-gradient(135deg, #ffd6e7, #e7d7ff, #cdefff);
+
+      background-size: 120px 120px, 160px 160px, cover;
+
+      color: #39253f;
+      overflow-x: hidden;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    button:focus-visible {
+      outline: 4px solid #4c9ffe;
+      outline-offset: 4px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* =========================
+       MAIN STAGE
+    ========================== */
+
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 25px;
+      animation: fadeDown 1s ease both;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 4rem);
+      color: #713c70;
+      text-shadow: 0 4px 12px rgba(113, 60, 112, .15);
+    }
+
+    .title p {
+      margin: 10px 0 0;
+      font-size: 1rem;
+      color: #704d68;
+    }
+
+    /* =========================
+       CARD
+    ========================== */
+
+    .card-wrapper {
+      width: min(90vw, 460px);
+      perspective: 1200px;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      min-height: 300px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+    }
+
+    .card-cover {
+      position: absolute;
+      inset: 0;
+      min-height: 300px;
+
+      border-radius: 22px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      padding: 30px;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.92),
+          rgba(255,236,246,.94)
+        );
+
+      border: 3px solid rgba(255,255,255,.8);
+
+      box-shadow:
+        0 25px 60px rgba(84, 48, 83, .2),
+        inset 0 0 0 2px rgba(255, 255, 255, .5);
+
+      transition:
+        transform 1s cubic-bezier(.68,-0.2,.27,1.2),
+        opacity .7s ease;
+
+      transform-origin: left center;
+      backface-visibility: hidden;
+      z-index: 5;
+    }
+
+    .card-cover::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 2px dashed #e7a8c5;
+      border-radius: 15px;
+      pointer-events: none;
+    }
+
+    .heart {
+      font-size: 4rem;
+      animation: heartbeat 1.5s ease-in-out infinite;
+      margin-bottom: 15px;
+    }
+
+    .cover-title {
+      font-size: clamp(1.5rem, 5vw, 2.1rem);
+      font-weight: 800;
+      color: #713c70;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .open-text {
+      margin-top: 18px;
+      color: #8c5a7e;
+      font-size: .95rem;
+      z-index: 1;
+    }
+
+    .card.open .card-cover {
+      transform: rotateY(-145deg);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* =========================
+       INSIDE
+    ========================== */
+
+    .card-inside {
+      position: relative;
+      min-height: 580px;
+
+      padding: 35px 25px;
+
+      border-radius: 22px;
+
+      background:
+        linear-gradient(
+          160deg,
+          #fffdfd,
+          #fff4fa 50%,
+          #f7efff
+        );
+
+      box-shadow:
+        0 25px 60px rgba(84, 48, 83, .2);
+
+      overflow: hidden;
+    }
+
+    .card-inside::before {
+      content: "♡";
+      position: absolute;
+      top: -30px;
+      right: 15px;
+      font-size: 11rem;
+      color: rgba(235, 161, 194, .12);
+      transform: rotate(15deg);
+      pointer-events: none;
+    }
+
+    /* =========================
+       CAKE
+    ========================== */
+
+    .cake-area {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .cake-area h2 {
+      margin: 0 0 15px;
+      color: #713c70;
+      font-size: 1.6rem;
+    }
+
+    .cake {
+      width: 190px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+
+    .cake-top {
+      height: 48px;
+      background: #ffb5c9;
+      border-radius: 50% 50% 15px 15px;
+      position: relative;
+      box-shadow: inset 0 -8px rgba(191, 94, 139, .15);
+    }
+
+    .frosting {
+      position: absolute;
+      bottom: -13px;
+      left: 0;
+      width: 100%;
+      height: 28px;
+      background: #fff1f7;
+      border-radius: 0 0 30px 30px;
+    }
+
+    .frosting::before,
+    .frosting::after {
+      content: "●";
+      position: absolute;
+      color: #fff1f7;
+      font-size: 22px;
+    }
+
+    .frosting::before {
+      left: 35px;
+      bottom: -8px;
+    }
+
+    .frosting::after {
+      right: 35px;
+      bottom: -8px;
+    }
+
+    .cake-body {
+      height: 75px;
+      background: linear-gradient(90deg, #c97b5d, #eaa37f, #c97b5d);
+      border-radius: 8px 8px 20px 20px;
+      margin-top: 7px;
+      box-shadow: inset 0 -12px rgba(125, 69, 58, .12);
+    }
+
+    .candle {
+      width: 11px;
+      height: 43px;
+      background: repeating-linear-gradient(
+        135deg,
+        #b58cff 0 6px,
+        #fff 6px 12px
+      );
+      position: absolute;
+      top: -38px;
+      border-radius: 5px 5px 2px 2px;
+    }
+
+    .candle:nth-child(1) {
+      left: 48px;
+    }
+
+    .candle:nth-child(2) {
+      left: 89px;
+    }
+
+    .candle:nth-child(3) {
+      right: 48px;
+    }
+
+    .flame {
+      position: absolute;
+      width: 13px;
+      height: 18px;
+      background: #ffc857;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      top: -19px;
+      left: -1px;
+      animation: flicker .8s infinite alternate;
+      box-shadow: 0 0 12px #ffcc5c;
+    }
+
+    .blown-out .flame {
+      opacity: 0;
+      animation: none;
+    }
+
+    .blown-out .candle::after {
+      content: "💨";
+      position: absolute;
+      top: -30px;
+      left: 0;
+      font-size: 15px;
+      opacity: .8;
+    }
+
+    .candle-button {
+      border: none;
+      background: #713c70;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .2s, background .2s;
+    }
+
+    .candle-button:hover {
+      transform: translateY(-2px);
+      background: #8e4d89;
+    }
+
+    /* =========================
+       LETTER
+    ========================== */
+
+    .letter {
+      position: relative;
+      z-index: 2;
+
+      margin-top: 25px;
+      padding: 25px;
+
+      background: rgba(255,255,255,.8);
+      border: 1px solid rgba(205, 155, 190, .35);
+      border-radius: 18px;
+
+      box-shadow: 0 10px 30px rgba(102, 63, 99, .08);
+    }
+
+    .letter h3 {
+      margin-top: 0;
+      color: #713c70;
+      font-size: 1.5rem;
+    }
+
+    .letter p {
+      line-height: 1.8;
+      color: #594358;
+      margin: 12px 0;
+    }
+
+    .signature {
+      text-align: right;
+      color: #8b4e7f;
+      font-weight: bold;
+      margin-top: 22px;
+    }
+
+    /* =========================
+       CLOSE BUTTON
+    ========================== */
+
+    .close-card {
+      display: block;
+      margin: 25px auto 0;
+
+      border: 2px solid #c98ab0;
+      background: white;
+      color: #713c70;
+
+      padding: 10px 20px;
+      border-radius: 999px;
+
+      cursor: pointer;
+      font-weight: 700;
+
+      transition:
+        transform .2s,
+        background .2s;
+    }
+
+    .close-card:hover {
+      background: #fff0f7;
+      transform: translateY(-2px);
+    }
+
+    /* =========================
+       FLOATING HEARTS
+    ========================== */
+
+    .floating-heart {
+      position: fixed;
+      bottom: -30px;
+      pointer-events: none;
+      z-index: -1;
+      animation: floatUp linear forwards;
+      opacity: .7;
+    }
+
+    /* =========================
+       ANIMATIONS
+    ========================== */
+
+    @keyframes heartbeat {
+      0%, 100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.12);
+      }
+    }
+
+    @keyframes flicker {
+      from {
+        transform: rotate(-45deg) scale(.9);
+      }
+
+      to {
+        transform: rotate(-45deg) scale(1.1);
+      }
+    }
+
+    @keyframes floatUp {
+      from {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: .7;
+      }
+
+      to {
+        transform: translateY(-110vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =========================
+       REDUCED MOTION
+    ========================== */
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .stage {
+        padding: 25px 15px;
+      }
+
+      .card-inside {
+        padding: 28px 18px;
+      }
+
+      .letter {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="stage">
+
+    <header class="title">
+      <h1>Something special for you ♡</h1>
+      <p>A tiny birthday surprise made with love.</p>
+    </header>
+
+    <div class="card-wrapper">
+
+      <section
+        class="card"
+        id="birthdayCard"
+        aria-label="Interactive birthday card"
+      >
+
+        <!-- FRONT OF CARD -->
+        <button
+          class="card-cover"
+          id="openButton"
+          type="button"
+          aria-label="Open the birthday card"
+          aria-controls="cardInside"
+          aria-expanded="false"
+        >
+
+          <div class="heart" aria-hidden="true">💗</div>
+
+          <div class="cover-title">
+            Happy Birthday,<br />
+            My Favorite Person
+          </div>
+
+          <div class="open-text">
+            ✨ Tap to open your little surprise ✨
+          </div>
+
+        </button>
+
+
+        <!-- INSIDE OF CARD -->
+        <div
+          class="card-inside"
+          id="cardInside"
+          aria-hidden="true"
+        >
+
+          <section class="cake-area">
+
+            <h2>A little birthday cake for you 🎂</h2>
+
+            <div
+              class="cake"
+              id="cake"
+              aria-label="Birthday cake with three candles"
+            >
+
+              <div class="cake-top">
+
+                <div class="candle">
+                  <span class="flame"></span>
+                </div>
+
+                <div class="candle">
+                  <span class="flame"></span>
+                </div>
+
+                <div class="candle">
+                  <span class="flame"></span>
+                </div>
+
+                <div class="frosting"></div>
+
+              </div>
+
+              <div class="cake-body"></div>
+
+            </div>
+
+            <button
+              class="candle-button"
+              id="candleButton"
+              type="button"
+            >
+              🕯️ Make a wish!
+            </button>
+
+            <p
+              id="wishMessage"
+              class="sr-only"
+              aria-live="polite"
+            ></p>
+
+          </section>
+
+
+          <!-- LETTER -->
+          <article class="letter">
+
+            <h3>Dear Suami, 💌</h3>
+
+            <p>
+              Happy birthday! I hope today reminds you just how special
+              you are and how many little reasons there are to smile.
+            </p>
+
+            <p>
+              I hope this next year brings you new adventures, happy
+              memories, lots of laughter, and everything you've been
+              wishing for.
+            </p>
+
+            <p>
+              Thank you for being someone who can make ordinary moments
+              feel a little more special. I hope your birthday is as
+              wonderful as you are.
+            </p>
+
+            <p>
+              Keep smiling, keep dreaming, and don't forget to make a
+              really big wish before you blow out those candles. ✨
+            </p>
+
+            <p class="signature">
+              With lots of love,<br />
+              Your Asawa ♡
+            </p>
+
+          </article>
+
+
+          <button
+            class="close-card"
+            id="closeButton"
+            type="button"
+            aria-label="Close the birthday card"
+          >
+            ↩ Close the card
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <script>
+    /* =========================
+       CARD INTERACTION
+    ========================== */
+
+    const card = document.getElementById("birthdayCard");
+    const openButton = document.getElementById("openButton");
+    const closeButton = document.getElementById("closeButton");
+    const cardInside = document.getElementById("cardInside");
+
+    function openCard() {
+      card.classList.add("open");
+
+      openButton.setAttribute("aria-expanded", "true");
+      cardInside.setAttribute("aria-hidden", "false");
+
+      closeButton.focus();
+
+      startHeartAnimation();
+    }
+
+    function closeCard() {
+      card.classList.remove("open");
+
+      openButton.setAttribute("aria-expanded", "false");
+      cardInside.setAttribute("aria-hidden", "true");
+
+      openButton.focus();
+    }
+
+    openButton.addEventListener("click", openCard);
+    closeButton.addEventListener("click", closeCard);
+
+
+    /* =========================
+       CANDLE / WISH
+    ========================== */
+
+    const candleButton = document.getElementById("candleButton");
+    const cake = document.getElementById("cake");
+    const wishMessage = document.getElementById("wishMessage");
+
+    candleButton.addEventListener("click", () => {
+
+      cake.classList.toggle("blown-out");
+
+      if (cake.classList.contains("blown-out")) {
+
+        candleButton.textContent = "✨ Light the candles again";
+
+        wishMessage.textContent =
+          "The candles have been blown out. Make a wish!";
+
+      } else {
+
+        candleButton.textContent = "🕯️ Make a wish!";
+
+        wishMessage.textContent =
+          "The candles are lit again.";
+
+      }
+    });
+
+
+    /* =========================
+       FLOATING HEARTS
+    ========================== */
+
+    let heartInterval;
+
+    function createHeart() {
+
+      const heart = document.createElement("div");
+
+      heart.className = "floating-heart";
+
+      const hearts = ["♡", "♥", "💗", "💖", "✦"];
+
+      heart.textContent =
+        hearts[Math.floor(Math.random() * hearts.length)];
+
+      heart.style.left =
+        Math.random() * 100 + "vw";
+
+      heart.style.fontSize =
+        (Math.random() * 18 + 12) + "px";
+
+      heart.style.animationDuration =
+        (Math.random() * 4 + 5) + "s";
+
+      document.body.appendChild(heart);
+
+      setTimeout(() => {
+        heart.remove();
+      }, 9000);
+    }
+
+    function startHeartAnimation() {
+
+      if (heartInterval) return;
+
+      heartInterval = setInterval(createHeart, 700);
+    }
+
+
+    /* =========================
+       KEYBOARD SUPPORT
+    ========================== */
+
+    document.addEventListener("keydown", (event) => {
+
+      if (event.key === "Escape" && card.classList.contains("open")) {
+        closeCard();
+      }
+
+    });
+  </script>
+
+</body>
+</html>
